@@ -132,7 +132,7 @@
       "sectionCaption": "Change tracking and signal score (optional)",
       "title": "Change tracking (new vs repeat issuers, amendments)",
       "type": "boolean",
-      "description": "Off by default. Remembers every issuer (CIK) delivered under your Monitor state key. Later runs skip filings you already got and label each row change_type 'new' (issuer never seen before) or 'changed' (a new Form D or a D/A amendment from an issuer you already have, with previous_amount_sold_usd and amount_sold_delta_usd). Amendments from tracked issuers are included even when 'Only new offerings' is on. When on, it replaces 'Only new since last run' for this run.",
+      "description": "Off by default. Remembers every issuer (CIK) delivered under your Monitor state key. Later runs skip filings you already got and label each row change_type 'new' (issuer never seen before) or 'changed' (a new Form D or a D/A amendment from an issuer you already have, with previous_amount_sold_usd and amount_sold_delta_usd). Amendments from tracked issuers are included even when 'Only new offerings' is on. Max results and Max filings to scan only limit output: every candidate filing in the window is saved as seen, so capped-out filings are never sent or charged later (see skipped_by_max_results in RUN_SUMMARY). Only filings stopped by your max charge are carried over. When on, it replaces 'Only new since last run' for this run.",
       "default": false
     },
     "signalScoring": {

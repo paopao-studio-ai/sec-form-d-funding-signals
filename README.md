@@ -81,6 +81,8 @@ Turn on **Change tracking** (`changeTracking: true`) with a `stateKey` and sched
 
 Amendments from tracked issuers come through even when *Only new offerings* is on. Untracked amendments still follow that setting. Form D has no "closed" event, so there are no closed rows. Off by default; when on, it replaces *Only new since last run* for that run.
 
+**Caps only limit output.** With change tracking, every candidate filing in the date window is saved as seen, including filings cut by *Max results* and filings beyond *Max filings to scan*. A rerun with the same input therefore outputs nothing and charges nothing. Skipped filings are not carried to the next run; `RUN_SUMMARY` reports them as `skipped_by_max_results` and `skipped_by_max_scan`, so raise the caps if those counts are not 0. Only XML fetch errors (retried next run) and filings your *max charge per run* stopped stay unseen, so no filing is charged twice. The issuer list (new vs changed) only includes issuers you were actually sent. The older *Only new since last run* mode keeps its own behavior.
+
 Real example (Oct 2026 data; run 1 covered Oct 1-7, run 2 covered Oct 1-9 with `companyKeywords: ["Swarm Defense"]` among others):
 ```json
 {"company_name":"Swarm Defense Technologies, Inc.","form_type":"D/A","filed_date":"2026-10-09","change_type":"changed",

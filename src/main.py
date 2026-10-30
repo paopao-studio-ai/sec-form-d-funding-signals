@@ -50,7 +50,9 @@ def _scan(inp: dict, seen: set[str] | None, log, tracked: set[str] | None = None
             rows = [r for r in rows if r["accession_number"] not in seen]
             stats["skipped_seen"] = before - len(rows)
         stats["after_prefilter"] = len(rows)
+        candidates = [r["accession_number"] for r in rows]
         rows = rows[:max_scan]
+        failed: set[str] = set()
         out: list[dict] = []
         processed: list[str] = []
 
@@ -70,6 +72,7 @@ def _scan(inp: dict, seen: set[str] | None, log, tracked: set[str] | None = None
                 for r, rec in ex.map(one, rows[i:i + 40]):
                     if rec is None:
                         stats["xml_failed"] += 1
+                        failed.add(r["accession_number"])
                         continue
                     stats["xml_fetched"] += 1
                     processed.append(r["accession_number"])
@@ -80,11 +83,21 @@ def _scan(inp: dict, seen: set[str] | None, log, tracked: set[str] | None = None
                 if len(out) >= max_results:
                     break
         out.sort(key=lambda x: (x.get("filed_date") or "", x.get("total_amount_sold_usd") or 0), reverse=True)
-        # Matches beyond maxResults stay "unseen" so the next monitor run still delivers them.
+        # Legacy monitor: matches beyond maxResults stay "unseen" so the next monitor run still delivers them.
         dropped = {x["accession_number"] for x in out[max_results:]}
         out = out[:max_results]
         stats["matched"] = len(out)
         scanned = [a for a in processed if a not in dropped]
+        if tracked is not None:
+            # Change tracking: maxResults / maxFilingsToScan only limit this run's output. Every candidate
+            # filing in the window counts as seen (matched-but-cut, never fetched because output was full,
+            # or past the scan cap), so an identical rerun outputs nothing and nothing is charged twice.
+            # Only XML fetch errors (retried next run) and rows the max-charge limit stopped stay unseen.
+            done = set(processed)
+            stats["skipped_by_max_results"] = len(dropped) + sum(
+                1 for a in candidates[:max_scan] if a not in done and a not in failed)
+            stats["skipped_by_max_scan"] = max(0, len(candidates) - max_scan)
+            scanned = [a for a in candidates if a not in failed]
         if score:
             # One extra /Archives/ request per delivered filing: the issuer's EDGAR folder listing.
             targets = _lst(inp.get("scoreIndustries"))
