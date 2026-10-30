@@ -6,6 +6,17 @@ No login. No API key. No proxy. Funds, SPVs and real-estate vehicles are filtere
 
 > Real example from one run (filed 2026-10-27 → 2026-10-29, tech & health, ≥ $500k): **Commure, Inc.** (Mountain View, CA) $70.1M · **TrashLab Software Inc.** (San Francisco, CA) $10.7M · **Arms Cyber Defense, Inc.** (Los Gatos, CA) $9.96M · **Septal Solutions, Inc.** (Exton, PA) $7.3M via SAFE · **Fathom Water Corp** (Kirkland, WA) $4.3M · **Swep Bio, Inc.** (Scarsdale, NY) $2.5M.
 
+## What's new: change tracking and signal scoring
+
+Two optional switches (both **off by default**):
+
+1. **Change tracking** (`changeTracking`) + **State key** (`stateKey`) — schedule the Actor and label each filing `new` (issuer never seen under this key) or `changed` (new Form D or a D/A amendment, with amount delta). First run is a baseline. Form D has no closed event.
+2. **Signal scoring** (`signalScoring`) — adds an explainable 0–100 `signal_score`, a hot/warm/cool/cold tier and plain-English `score_reasons` on each filing.
+
+**Baseline tip.** With change tracking on, *Max results* and *Max filings to scan* only limit this run's output. Every candidate filing in the date window is saved as seen, so capped-out filings are **not** sent or charged on a later run. Check `skipped_by_max_results` and `skipped_by_max_scan` in `RUN_SUMMARY`; raise the caps on the first run if those are not 0 and you want a fuller baseline. Only filings stopped by your max charge per run (or XML fetch errors) stay unseen.
+
+Details: [Change tracking](#change-tracking-new-vs-repeat-issuers-optional) · [Signal score](#explainable-signal-score-optional).
+
 ## Who it's for
 
 | You are | What you do with it |
@@ -159,6 +170,13 @@ Use this when you want **every new US private round, fast and cheap, straight fr
 
 **Can I see older filings?** Up to 90 days back per run with `startDate` / `endDate`.
 
+
+**What is change tracking / stateKey?** Turn on `changeTracking` and set a `stateKey`. The Actor remembers issuers under that key and later runs only push filings you have not already got, labeled new or changed. Use different keys for different watch lists.
+
+**What is signal scoring?** Turn on `signalScoring` for an explainable 0–100 score with reasons on each filing. It is a ranking aid, not a prediction.
+
+**I used a small Max results on the first tracked run — where did the rest go?** With change tracking, capped-out filings are marked seen and will not be pushed later. Raise Max results / Max filings to scan on the baseline (or check RUN_SUMMARY skip counts) if you want a fuller baseline.
+
 ## Related Actors by PaoPao Studio
 
 - [ATS Jobs Monitor for Recruiter BD](https://apify.com/goldenrod_serrano/ats-hiring-signals) — new and closed jobs from Greenhouse, Lever, Ashby, Workable, SmartRecruiters and Recruitee, with hiring signals per company.
@@ -169,6 +187,7 @@ Funding (this Actor) + new job postings (above) = the two strongest "they're abo
 ## Changelog
 
 - 1.1 — explicit **Free sample mode** (Apify fills defaults into the input, so the old "empty input = sample" never triggered on the platform); prefill trimmed to 20 results; README rewrite.
+- 1.2 — change tracking: caps only limit output (full scanned list saved as seen); README / store copy for changeTracking + signalScoring.
 - 1.1 — optional change tracking (new vs repeat issuers, amendments with amount delta) and an explainable 0-100 signal score.
 - 1.0 — first release: daily-index scan, operating-company filter, monitor mode, PPE `filing` event.
 
