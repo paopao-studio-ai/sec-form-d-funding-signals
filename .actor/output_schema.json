@@ -9,6 +9,12 @@
       "description": "Newly funded companies from SEC Form D (dataset view 'filings').",
       "template": "{{links.apiDefaultDatasetUrl}}/items?view=filings"
     },
+    "signals": {
+      "type": "string",
+      "title": "Scored signals and changes",
+      "description": "Signal score, reasons and new/changed issuer labels (dataset view 'signals'; filled when Signal score or Change tracking is on).",
+      "template": "{{links.apiDefaultDatasetUrl}}/items?view=signals"
+    },
     "runSummary": {
       "type": "string",
       "title": "Run summary",

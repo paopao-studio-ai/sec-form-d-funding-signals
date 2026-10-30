@@ -360,3 +360,154 @@ def plan_run(raw: dict | None) -> tuple[dict, bool]:
         return dict(SAMPLE_INPUT), True
     raw.pop("sampleMode", None)
     return raw, False
+
+
+# ---------------------------------------------------------------- signal score (optional)
+TECH = {"Computers", "Telecommunications", "Other Technology"}
+HEALTH = {"Biotechnology", "Pharmaceuticals", "Other Health Care", "Health Insurance", "Hospitals and Physicians"}
+ENERGY = {"Electric Utilities", "Energy Conservation", "Coal Mining", "Environmental Services", "Oil and Gas",
+          "Other Energy"}
+LOW_SIGNAL = {"Pooled Investment Fund", "Investing", "REITS and Finance", "Residential", "Commercial",
+              "Construction", "Other Real Estate", "Banking and Financial Services", "Commercial Banking",
+              "Insurance", "Investment Banking", "Other Banking and Financial Services"}
+
+
+def prior_edgar_filings(index_json: dict, accession_number: str, filed_date: str | None) -> int | None:
+    """Count the issuer's EDGAR filing folders dated before this filing (from /Archives/edgar/data/{cik}/index.json)."""
+    try:
+        items = index_json["directory"]["item"]
+    except (KeyError, TypeError):
+        return None
+    own = accession_number.replace("-", "")
+    n = 0
+    for it in items:
+        if it.get("name") == own or "folder" not in str(it.get("type", "")):
+            continue
+        lm = str(it.get("last-modified") or "")[:10]
+        if filed_date and lm and lm < filed_date:
+            n += 1
+    return n
+
+
+def _tier(score: int) -> str:
+    return "hot" if score >= 70 else "warm" if score >= 45 else "cool" if score >= 20 else "cold"
+
+
+def score_filing(rec: dict, prior_filings: int | None = None, target_industries: Iterable[str] | None = None,
+                 today: date | None = None) -> dict:
+    """Explainable 0-100 funding-signal score for one Form D filing.
+
+    Components (max points): amount raised 35, first filing / new offering 20, young company 15,
+    industry 15, freshness (first sale -> filing) 10, round traction (percent sold, investors) 5.
+    """
+    import math
+    today = today or datetime.now(timezone.utc).date()
+    comp: dict[str, int] = {}
+    reasons: list[str] = []
+
+    sold = rec.get("total_amount_sold_usd") or 0
+    if sold > 100_000:
+        comp["amount"] = round(35 * min(1.0, math.log10(sold / 100_000) / 3))  # $100k -> 0, $100M+ -> 35
+    else:
+        comp["amount"] = 0
+    reasons.append(f"+{comp['amount']} amount: ${sold:,.0f} sold so far (log scale: $100k = 0, $100M+ = 35)")
+
+    amend = bool(rec.get("is_amendment"))
+    if prior_filings == 0 and not amend:
+        comp["first_filing"] = 20
+        reasons.append("+20 first filing: this is the issuer's first EDGAR filing (new to SEC filings)")
+    elif prior_filings is not None and not amend and prior_filings <= 3:
+        comp["first_filing"] = 10
+        reasons.append(f"+10 first filing: new offering, issuer has only {prior_filings} earlier EDGAR "
+                       f"filing{'s' if prior_filings != 1 else ''}")
+    elif not amend:
+        comp["first_filing"] = 5
+        extra = f"{prior_filings} earlier EDGAR filings" if prior_filings is not None else "earlier filings not checked"
+        reasons.append(f"+5 first filing: new offering by a repeat filer ({extra})")
+    else:
+        comp["first_filing"] = 0
+        reasons.append("+0 first filing: amendment to an earlier Form D")
+
+    yr = rec.get("year_of_inc")
+    if rec.get("incorporated_within_5_years") is True:
+        young = yr is not None and yr >= today.year - 2
+        comp["young_company"] = 15 if young or yr is None else 10
+        reasons.append(f"+{comp['young_company']} young company: incorporated "
+                       + (f"in {yr}" if yr else "within the last 5 years"))
+    else:
+        comp["young_company"] = 0
+        reasons.append("+0 young company: " + (f"incorporated in {yr}" if yr else "incorporated over 5 years ago or not stated"))
+
+    ind = rec.get("industry_group") or ""
+    targets = [t.lower() for t in (target_industries or [])]
+    if targets:
+        comp["industry"] = 15 if ind.lower() in targets else 0
+        reasons.append(f"+{comp['industry']} industry: {ind or 'not stated'}"
+                       + (" (in your target industries)" if comp["industry"] else " (not in your target industries)"))
+    else:
+        pts = 15 if ind in TECH else 12 if ind in HEALTH else 10 if ind in ENERGY else 0 if ind in LOW_SIGNAL else 6 if ind else 0
+        comp["industry"] = pts
+        label = ("technology" if ind in TECH else "health/biotech" if ind in HEALTH else "energy/climate" if ind in ENERGY
+                 else "finance/real estate" if ind in LOW_SIGNAL else "other operating industry")
+        reasons.append(f"+{pts} industry: {ind or 'not stated'}" + (f" ({label})" if ind else ""))
+
+    d = rec.get("days_first_sale_to_filing")
+    if rec.get("first_sale_yet_to_occur"):
+        comp["freshness"] = 6
+        reasons.append("+6 freshness: first sale has not happened yet (still raising)")
+    elif d is not None:
+        comp["freshness"] = 10 if d <= 15 else 7 if d <= 30 else 4 if d <= 90 else 1
+        reasons.append(f"+{comp['freshness']} freshness: filed {d} days after the first sale")
+    else:
+        comp["freshness"] = 0
+        reasons.append("+0 freshness: no first-sale date")
+
+    pct, inv = rec.get("percent_sold"), rec.get("investors_count")
+    t = (3 if pct is not None and pct >= 100 else 2 if pct is not None and pct >= 50 else 0)
+    t += (2 if inv is not None and inv >= 10 else 1 if inv is not None and inv >= 3 else 0)
+    comp["traction"] = min(5, t)
+    reasons.append(f"+{comp['traction']} traction: "
+                   + (f"{pct:g}% of the offering sold" if pct is not None else "offering size not stated")
+                   + (f", {inv} investors" if inv is not None else ""))
+
+    score = max(0, min(100, sum(comp.values())))
+    order = sorted(range(len(reasons)), key=lambda i: -list(comp.values())[i])
+    return {"signal_score": score, "signal_tier": _tier(score), "score_reasons": [reasons[i] for i in order],
+            "score_components": comp, "prior_edgar_filings": prior_filings,
+            "is_first_edgar_filing": (prior_filings == 0) if prior_filings is not None else None}
+
+
+# ---------------------------------------------------------------- change tracking (optional)
+TRACK_KEEP = 20000
+
+
+def apply_tracking(recs: list[dict], issuers: dict, now_iso: str) -> None:
+    """Label each record new/changed against per-issuer state (in place). Does not update state."""
+    for r in recs:
+        prev = issuers.get(r["cik"])
+        if prev is None:
+            r["change_type"] = "new"
+            r.update({"previous_accession_number": None, "previous_filed_date": None,
+                      "previous_amount_sold_usd": None, "amount_sold_delta_usd": None, "issuer_first_seen_at": now_iso})
+            continue
+        r["change_type"] = "changed"
+        pa = prev.get("a")
+        cur = r.get("total_amount_sold_usd")
+        r.update({"previous_accession_number": prev.get("acc"), "previous_filed_date": prev.get("f"),
+                  "previous_amount_sold_usd": pa,
+                  "amount_sold_delta_usd": (cur - pa) if cur is not None and pa is not None else None,
+                  "issuer_first_seen_at": prev.get("fs")})
+
+
+def update_issuers(issuers: dict, delivered: list[dict], now_iso: str) -> dict:
+    """Return the next issuer map after `delivered` rows (oldest first so the newest filing wins)."""
+    out = dict(issuers)
+    for r in sorted(delivered, key=lambda x: x.get("filed_date") or ""):
+        prev = out.get(r["cik"]) or {}
+        out[r["cik"]] = {"n": r.get("company_name"), "acc": r["accession_number"], "f": r.get("filed_date"),
+                         "a": r.get("total_amount_sold_usd"), "fs": prev.get("fs") or now_iso,
+                         "c": int(prev.get("c") or 0) + 1, "u": now_iso}
+    if len(out) > TRACK_KEEP:
+        keep = sorted(out.items(), key=lambda kv: kv[1].get("u") or "", reverse=True)[:TRACK_KEEP]
+        out = dict(keep)
+    return out

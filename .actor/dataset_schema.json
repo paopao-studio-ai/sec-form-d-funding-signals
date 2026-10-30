@@ -20,6 +20,27 @@
           "edgar_company_url": {"label": "EDGAR company", "format": "link"}
         }
       }
+    },
+    "signals": {
+      "title": "Scored signals and changes",
+      "transformation": {
+        "fields": ["signal_score", "signal_tier", "change_type", "company_name", "filed_date", "total_amount_sold_usd",
+          "amount_sold_delta_usd", "previous_amount_sold_usd", "previous_filed_date", "is_first_edgar_filing",
+          "prior_edgar_filings", "industry_group", "issuer_state", "year_of_inc", "score_reasons", "form_type", "cik",
+          "accession_number", "filing_url"]
+      },
+      "display": {
+        "component": "table",
+        "properties": {
+          "signal_score": {"label": "Score", "format": "number"},
+          "total_amount_sold_usd": {"label": "Raised (USD)", "format": "number"},
+          "amount_sold_delta_usd": {"label": "Change in raised (USD)", "format": "number"},
+          "previous_amount_sold_usd": {"label": "Previously raised (USD)", "format": "number"},
+          "is_first_edgar_filing": {"label": "First EDGAR filing", "format": "boolean"},
+          "score_reasons": {"label": "Why", "format": "array"},
+          "filing_url": {"label": "Filing", "format": "link"}
+        }
+      }
     }
   }
 }

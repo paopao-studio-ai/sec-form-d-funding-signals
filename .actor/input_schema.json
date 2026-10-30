@@ -128,6 +128,25 @@
       "editor": "textfield",
       "default": "default"
     },
+    "changeTracking": {
+      "sectionCaption": "Change tracking and signal score (optional)",
+      "title": "Change tracking (new vs repeat issuers, amendments)",
+      "type": "boolean",
+      "description": "Off by default. Remembers every issuer (CIK) delivered under your Monitor state key. Later runs skip filings you already got and label each row change_type 'new' (issuer never seen before) or 'changed' (a new Form D or a D/A amendment from an issuer you already have, with previous_amount_sold_usd and amount_sold_delta_usd). Amendments from tracked issuers are included even when 'Only new offerings' is on. When on, it replaces 'Only new since last run' for this run.",
+      "default": false
+    },
+    "signalScoring": {
+      "title": "Signal score (0-100 with reasons)",
+      "type": "boolean",
+      "description": "Off by default. Adds signal_score, signal_tier (hot/warm/cool/cold) and score_reasons to each filing: amount raised (35), first EDGAR filing / new offering (20), incorporated within 5 years (15), industry (15), first sale to filing freshness (10), round traction (5). Uses one extra SEC request per delivered filing (the issuer's EDGAR folder listing) to check whether this is its first filing.",
+      "default": false
+    },
+    "scoreIndustries": {
+      "title": "Target industries for the score (optional)",
+      "type": "array",
+      "description": "Exact Form D industry group names that get the full 15 industry points, e.g. Biotechnology, Other Technology. Empty = built-in weights (technology 15, health/biotech 12, energy 10, other operating 6, finance/real estate 0).",
+      "editor": "stringList"
+    },
     "maxResults": {
       "title": "Max results",
       "type": "integer",

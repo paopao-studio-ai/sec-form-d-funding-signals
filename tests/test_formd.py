@@ -105,11 +105,15 @@ def test_schemas_are_consistent():
     used = {"sampleMode", "daysBack", "startDate", "endDate", "categories", "industries", "states", "minAmountSold",
             "maxAmountSold", "onlyIncorporatedWithin5Years", "onlyNewOfferings", "companyKeywords",
             "excludeCompanyKeywords", "onlyNewSinceLastRun", "stateKey", "maxResults", "maxFilingsToScan",
-            "requestsPerSecond", "userAgent"}
+            "requestsPerSecond", "userAgent", "changeTracking", "signalScoring", "scoreIndustries"}
     assert used == set(inp)
     rec = formd.parse_form_d((FX / "operating.xml").read_text(), ROW)
     view = json.loads((root / "dataset_schema.json").read_text())["views"]["filings"]["transformation"]["fields"]
     assert set(view) <= set(rec), set(view) - set(rec)
+    rec.update(formd.score_filing(rec, 0))
+    formd.apply_tracking([rec], {}, "2026-10-30T00:00:00Z")
+    sig = json.loads((root / "dataset_schema.json").read_text())["views"]["signals"]["transformation"]["fields"]
+    assert set(sig) <= set(rec), set(sig) - set(rec)
 
 
 def test_long_keyword_is_prefix_match():

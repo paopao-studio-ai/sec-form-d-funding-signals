@@ -74,13 +74,49 @@ One row per filing. Full real record: [`docs/example_output.json`](docs/example_
 
 Exports to JSON, CSV, Excel, or via API / webhooks / Zapier / Make like any Apify dataset.
 
+## Change tracking: new vs repeat issuers (optional)
+Turn on **Change tracking** (`changeTracking: true`) with a `stateKey` and schedule the Actor. It remembers every issuer (CIK) it has delivered. Later runs skip filings you already got, and each row gets:
+- `change_type: "new"` when the issuer has never been delivered under this key
+- `change_type: "changed"` for a new Form D or a **D/A amendment** from an issuer you already have, with `previous_accession_number`, `previous_filed_date`, `previous_amount_sold_usd` and `amount_sold_delta_usd` (how much more was raised since the filing you saw)
+
+Amendments from tracked issuers come through even when *Only new offerings* is on. Untracked amendments still follow that setting. Form D has no "closed" event, so there are no closed rows. Off by default; when on, it replaces *Only new since last run* for that run.
+
+Real example (Oct 2026 data; run 1 covered Oct 1-7, run 2 covered Oct 1-9 with `companyKeywords: ["Swarm Defense"]` among others):
+```json
+{"company_name":"Swarm Defense Technologies, Inc.","form_type":"D/A","filed_date":"2026-10-09","change_type":"changed",
+ "total_amount_sold_usd":2040000,"previous_amount_sold_usd":2000000,"amount_sold_delta_usd":40000,"previous_filed_date":"2026-10-05"}
+```
+
+## Explainable signal score (optional)
+Turn on **Signal score** (`signalScoring: true`) to add `signal_score` (0-100), `signal_tier` (hot ≥70, warm ≥45, cool ≥20, cold), `score_reasons`, `score_components`, `prior_edgar_filings` and `is_first_edgar_filing` to every row.
+
+| Component | Max | What it measures |
+|---|---|---|
+| amount | 35 | amount sold, log scale ($100k = 0, $100M+ = 35) |
+| first filing | 20 | the issuer's first EDGAR filing (20), a new offering from an issuer with up to 3 earlier filings (10), a repeat filer (5), an amendment (0) |
+| young company | 15 | incorporated within 5 years (15 if within the last 2 years) |
+| industry | 15 | your `scoreIndustries` (15 or 0), or built-in weights: technology 15, health/biotech 12, energy 10, other operating 6, finance/real estate 0 |
+| freshness | 10 | days from first sale to filing (≤15 days = 10) or still raising |
+| traction | 5 | percent of the offering sold and number of investors |
+
+Checking for a first filing costs one extra request to SEC's public `/Archives/edgar/data/{cik}/index.json` per delivered filing, at the same polite rate.
+
+Real example (filed Oct 5 2026):
+```json
+{"company_name":"Swarm Defense Technologies, Inc.","total_amount_sold_usd":2000000,"signal_score":68,"signal_tier":"warm",
+ "score_reasons":["+15 amount: $2,000,000 sold so far (log scale: $100k = 0, $100M+ = 35)","+15 young company: incorporated in 2026",
+  "+15 industry: Other Technology (technology)","+10 first filing: new offering, issuer has only 1 earlier EDGAR filing",
+  "+10 freshness: filed 11 days after the first sale","+3 traction: 100% of the offering sold, 1 investors"]}
+```
+The score helps you rank filings. It doesn't predict anything.
+
 ## Pricing (pay per event)
 
 | Event | When it is charged | Price |
 |---|---|---|
 | `filing` | One matched Form D filing pushed to your dataset | **$0.008** (= $8 per 1,000 filings) |
 
-That is the only charge. No start fee. Filings removed by your filters, errors, and **Free sample mode** runs are not charged. Monitor mode never re-charges a filing it already gave you. Set *Maximum cost per run* and the Actor stops cleanly at your limit.
+That is the only charge. No start fee. Filings removed by your filters, errors, and **Free sample mode** runs are not charged. Monitor mode and change tracking never re-charge a filing they already gave you. With change tracking, an amendment to a tracked issuer is a new filing and is charged as one `filing`. Set *Maximum cost per run* and the Actor stops cleanly at your limit.
 
 Illustration (not a measured average): a daily monitor that returns ~20 new tech/health rounds per business day ≈ 440 filings a month ≈ **$3.52/month**.
 
@@ -131,6 +167,7 @@ Funding (this Actor) + new job postings (above) = the two strongest "they're abo
 ## Changelog
 
 - 1.1 — explicit **Free sample mode** (Apify fills defaults into the input, so the old "empty input = sample" never triggered on the platform); prefill trimmed to 20 results; README rewrite.
+- 1.1 — optional change tracking (new vs repeat issuers, amendments with amount delta) and an explainable 0-100 signal score.
 - 1.0 — first release: daily-index scan, operating-company filter, monitor mode, PPE `filing` event.
 
 ---
