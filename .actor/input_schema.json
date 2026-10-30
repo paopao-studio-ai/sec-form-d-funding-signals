@@ -1,0 +1,136 @@
+{
+  "title": "SEC Form D Funding Signals input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "daysBack": {
+      "title": "Days back",
+      "type": "integer",
+      "description": "Scan EDGAR filings from the last N calendar days (business days only are fetched). Ignored if Start date is set. Max 90.",
+      "default": 7,
+      "prefill": 7,
+      "minimum": 1,
+      "maximum": 90
+    },
+    "startDate": {
+      "title": "Start date (optional)",
+      "type": "string",
+      "description": "First filing date to scan, YYYY-MM-DD. Leave empty to use Days back.",
+      "editor": "textfield",
+      "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$"
+    },
+    "endDate": {
+      "title": "End date (optional)",
+      "type": "string",
+      "description": "Last filing date to scan, YYYY-MM-DD. Defaults to today.",
+      "editor": "textfield",
+      "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$"
+    },
+    "categories": {
+      "title": "Issuer types",
+      "type": "array",
+      "description": "operating_company = real startups/companies (default). pooled_fund = VC/PE/hedge funds. spv_or_vehicle = SPVs, co-invest and holding vehicles. real_estate = REITs and property deals.",
+      "editor": "select",
+      "items": {"type": "string", "enum": ["operating_company", "pooled_fund", "spv_or_vehicle", "real_estate"],
+        "enumTitles": ["Operating companies (startups)", "Pooled investment funds", "SPVs / investment vehicles", "Real estate"]},
+      "prefill": ["operating_company"],
+      "default": ["operating_company"]
+    },
+    "industries": {
+      "title": "Industries (optional)",
+      "type": "array",
+      "description": "Exact Form D industry group names, e.g. Biotechnology, Computers, Other Technology, Pharmaceuticals, Other Health Care, Business Services, Retailing, Manufacturing, Telecommunications, Other Energy, Oil and Gas. Empty = all.",
+      "editor": "stringList",
+      "prefill": ["Other Technology", "Computers", "Biotechnology", "Other Health Care"]
+    },
+    "states": {
+      "title": "Issuer states (optional)",
+      "type": "array",
+      "description": "Two-letter US state codes of the issuer's principal place of business, e.g. CA, NY, TX, MA. Empty = all (including non-US EDGAR codes).",
+      "editor": "stringList",
+      "prefill": []
+    },
+    "minAmountSold": {
+      "title": "Minimum amount raised (USD)",
+      "type": "integer",
+      "description": "Only filings whose total amount sold is at least this much. 0 = no minimum.",
+      "prefill": 500000,
+      "minimum": 0
+    },
+    "maxAmountSold": {
+      "title": "Maximum amount raised (USD)",
+      "type": "integer",
+      "description": "Only filings whose total amount sold is at most this much. 0 = no maximum.",
+      "minimum": 0
+    },
+    "onlyIncorporatedWithin5Years": {
+      "title": "Only companies incorporated in the last 5 years",
+      "type": "boolean",
+      "description": "Keep only issuers that ticked 'within five years' on Form D — a good young-startup filter.",
+      "default": false
+    },
+    "onlyNewOfferings": {
+      "title": "Only new offerings (skip amendments)",
+      "type": "boolean",
+      "description": "Skip Form D/A amendments so each round appears once. Turn off to also see updated totals.",
+      "default": true
+    },
+    "companyKeywords": {
+      "title": "Company name must contain (optional)",
+      "type": "array",
+      "description": "Keep only issuers whose name contains any of these words (case-insensitive), e.g. AI, Bio, Robotics.",
+      "editor": "stringList"
+    },
+    "excludeCompanyKeywords": {
+      "title": "Exclude company names containing (optional)",
+      "type": "array",
+      "description": "Drop issuers whose name contains any of these words, e.g. Holdings, Capital.",
+      "editor": "stringList"
+    },
+    "onlyNewSinceLastRun": {
+      "title": "Monitor mode: only filings not seen in earlier runs",
+      "type": "boolean",
+      "description": "Remember accession numbers in a named key-value store so scheduled runs return only new filings (you are not charged twice for the same filing).",
+      "default": false
+    },
+    "stateKey": {
+      "title": "Monitor state key",
+      "type": "string",
+      "description": "Use different keys to keep separate watch lists.",
+      "editor": "textfield",
+      "default": "default"
+    },
+    "maxResults": {
+      "title": "Max results",
+      "type": "integer",
+      "description": "Stop after this many matched filings. Each pushed filing is one charged 'filing' event.",
+      "default": 200,
+      "prefill": 50,
+      "minimum": 1,
+      "maximum": 5000
+    },
+    "maxFilingsToScan": {
+      "title": "Max filings to download",
+      "type": "integer",
+      "description": "Safety cap on Form D XML documents fetched from EDGAR per run.",
+      "default": 3000,
+      "minimum": 10,
+      "maximum": 20000
+    },
+    "requestsPerSecond": {
+      "title": "SEC request rate",
+      "type": "integer",
+      "description": "Requests per second to sec.gov. SEC fair-access policy allows at most 10; capped at 9, default 5.",
+      "default": 5,
+      "minimum": 1,
+      "maximum": 9
+    },
+    "userAgent": {
+      "title": "User-Agent contact (optional)",
+      "type": "string",
+      "description": "SEC asks automated tools to declare 'Company Name email@example.com'. Leave empty to use the Actor's default contact.",
+      "editor": "textfield"
+    }
+  },
+  "required": []
+}

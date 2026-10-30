@@ -1,0 +1,17 @@
+{
+  "actorSpecification": 1,
+  "name": "sec-form-d-funding-signals",
+  "title": "SEC Form D Funding Tracker — Newly Funded Startups (Crunchbase Alternative)",
+  "description": "Daily list of US private companies that just raised money, straight from official SEC EDGAR Form D filings. Amount raised, industry, state, year founded, investor count, funds/SPVs filtered out. No login, no proxy, no personal data. Monitor mode returns only new filings.",
+  "version": "1.0",
+  "buildTag": "latest",
+  "minMemoryMbytes": 128,
+  "maxMemoryMbytes": 512,
+  "readme": "../README.md",
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile",
+  "storages": {
+    "dataset": "./dataset_schema.json"
+  },
+  "output": "./output_schema.json"
+}

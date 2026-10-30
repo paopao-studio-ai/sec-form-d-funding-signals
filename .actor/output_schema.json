@@ -1,0 +1,19 @@
+{
+  "actorOutputSchemaVersion": 1,
+  "title": "Output of SEC Form D Funding Signals",
+  "description": "One row per matched Form D filing in the default dataset, plus a RUN_SUMMARY record in the default key-value store.",
+  "properties": {
+    "filings": {
+      "type": "string",
+      "title": "Funding filings",
+      "description": "Newly funded companies from SEC Form D (dataset view 'filings').",
+      "template": "{{links.apiDefaultDatasetUrl}}/items?view=filings"
+    },
+    "runSummary": {
+      "type": "string",
+      "title": "Run summary",
+      "description": "Counts of index rows, filings fetched, matched and pushed.",
+      "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/RUN_SUMMARY"
+    }
+  }
+}

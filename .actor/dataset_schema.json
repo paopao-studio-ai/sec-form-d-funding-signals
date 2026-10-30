@@ -1,0 +1,25 @@
+{
+  "actorSpecification": 1,
+  "fields": {},
+  "views": {
+    "filings": {
+      "title": "Funding filings",
+      "transformation": {
+        "fields": ["company_name", "filed_date", "total_amount_sold_usd", "total_offering_amount_usd", "stage_hint",
+          "industry_group", "issuer_state", "issuer_city", "year_of_inc", "incorporated_within_5_years",
+          "date_of_first_sale", "days_first_sale_to_filing", "investors_count", "securities_offered",
+          "is_rule_506c_general_solicitation", "uses_placement_agent", "revenue_range", "category", "cik", "accession_number",
+          "filing_url", "edgar_company_url"]
+      },
+      "display": {
+        "component": "table",
+        "properties": {
+          "total_amount_sold_usd": {"label": "Raised (USD)", "format": "number"},
+          "total_offering_amount_usd": {"label": "Offering size (USD)", "format": "number"},
+          "filing_url": {"label": "Filing", "format": "link"},
+          "edgar_company_url": {"label": "EDGAR company", "format": "link"}
+        }
+      }
+    }
+  }
+}
