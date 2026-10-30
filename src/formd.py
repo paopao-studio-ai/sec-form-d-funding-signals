@@ -340,3 +340,23 @@ def matches(rec: dict, inp: dict) -> bool:
     if inp.get("onlyNewOfferings", True) and rec.get("is_amendment"):
         return False
     return True
+
+
+# ---------------------------------------------------------------- run mode
+SAMPLE_INPUT = {"daysBack": 3, "maxResults": 5, "categories": ["operating_company"], "onlyNewOfferings": True}
+
+
+def plan_run(raw: dict | None) -> tuple[dict, bool]:
+    """Decide free-sample vs paid run. Returns (effective_input, is_sample).
+
+    On the Apify platform the input is never empty: the console sends the schema prefill and the API
+    fills in every `default`, so "empty input" cannot be used to detect a sample request. A sample is
+    therefore only an explicit opt-in (`sampleMode: true`) or a truly empty input (local/CLI runs).
+    Sample runs ignore all filters (fixed: last 3 days, operating companies, 5 rows), never use monitor
+    state and are never charged. Every other input is a normal paid run.
+    """
+    raw = dict(raw or {})
+    if raw.get("sampleMode") is True or not raw:
+        return dict(SAMPLE_INPUT), True
+    raw.pop("sampleMode", None)
+    return raw, False

@@ -102,7 +102,7 @@ def test_rate_limiter_caps_at_9_per_second():
 def test_schemas_are_consistent():
     root = Path(__file__).parent.parent / ".actor"
     inp = json.loads((root / "input_schema.json").read_text())["properties"]
-    used = {"daysBack", "startDate", "endDate", "categories", "industries", "states", "minAmountSold",
+    used = {"sampleMode", "daysBack", "startDate", "endDate", "categories", "industries", "states", "minAmountSold",
             "maxAmountSold", "onlyIncorporatedWithin5Years", "onlyNewOfferings", "companyKeywords",
             "excludeCompanyKeywords", "onlyNewSinceLastRun", "stateKey", "maxResults", "maxFilingsToScan",
             "requestsPerSecond", "userAgent"}
@@ -115,3 +115,48 @@ def test_schemas_are_consistent():
 def test_long_keyword_is_prefix_match():
     rows = [{"company_name": "Accufy Biotech Inc"}, {"company_name": "Symbiotic Labs"}]
     assert [r["company_name"] for r in formd.prefilter_index(rows, {"companyKeywords": ["bio"]})] == ["Accufy Biotech Inc"]
+
+
+# --- run mode: the platform never sends an empty input, so sample must be explicit -------------
+SCHEMA = json.loads((Path(__file__).parent.parent / ".actor" / "input_schema.json").read_text())["properties"]
+
+
+def _platform_input(user: dict) -> dict:
+    """What Apify actually passes: schema defaults filled in for every missing field."""
+    return {**{k: v["default"] for k, v in SCHEMA.items() if "default" in v}, **user}
+
+
+def _console_prefill() -> dict:
+    return _platform_input({k: v["prefill"] for k, v in SCHEMA.items() if "prefill" in v})
+
+
+def test_console_prefill_is_a_paid_run_not_sample():
+    inp, sample = formd.plan_run(_console_prefill())
+    assert sample is False and inp["maxResults"] == SCHEMA["maxResults"]["prefill"]
+    assert "sampleMode" not in inp
+
+
+def test_api_call_with_only_defaults_is_paid():
+    inp, sample = formd.plan_run(_platform_input({}))
+    assert sample is False and inp["daysBack"] == 7
+
+
+def test_explicit_sample_mode_ignores_filters_and_is_free():
+    inp, sample = formd.plan_run(_platform_input({"sampleMode": True, "maxResults": 5000, "daysBack": 90,
+                                                  "onlyNewSinceLastRun": True, "industries": ["Banking"]}))
+    assert sample is True
+    assert inp == formd.SAMPLE_INPUT and inp["maxResults"] == 5 and "onlyNewSinceLastRun" not in inp
+
+
+def test_truly_empty_input_is_sample_for_local_runs():
+    assert formd.plan_run({})[1] is True and formd.plan_run(None)[1] is True
+
+
+def test_normal_paid_input_recognised():
+    inp, sample = formd.plan_run(_platform_input({"sampleMode": False, "industries": ["Biotechnology"],
+                                                  "minAmountSold": 1000000, "maxResults": 100}))
+    assert sample is False and inp["industries"] == ["Biotechnology"] and inp["maxResults"] == 100
+
+
+def test_sample_mode_defaults_off():
+    assert SCHEMA["sampleMode"]["default"] is False and "prefill" not in SCHEMA["sampleMode"]

@@ -3,6 +3,12 @@
   "type": "object",
   "schemaVersion": 1,
   "properties": {
+    "sampleMode": {
+      "title": "Free sample mode (not charged)",
+      "type": "boolean",
+      "description": "Turn on to get a free preview: 5 operating companies from the last 3 days. All filters below are ignored and nothing is charged. Leave off for a normal run (each pushed filing = one 'filing' event).",
+      "default": false
+    },
     "daysBack": {
       "title": "Days back",
       "type": "integer",
@@ -31,17 +37,39 @@
       "type": "array",
       "description": "operating_company = real startups/companies (default). pooled_fund = VC/PE/hedge funds. spv_or_vehicle = SPVs, co-invest and holding vehicles. real_estate = REITs and property deals.",
       "editor": "select",
-      "items": {"type": "string", "enum": ["operating_company", "pooled_fund", "spv_or_vehicle", "real_estate"],
-        "enumTitles": ["Operating companies (startups)", "Pooled investment funds", "SPVs / investment vehicles", "Real estate"]},
-      "prefill": ["operating_company"],
-      "default": ["operating_company"]
+      "items": {
+        "type": "string",
+        "enum": [
+          "operating_company",
+          "pooled_fund",
+          "spv_or_vehicle",
+          "real_estate"
+        ],
+        "enumTitles": [
+          "Operating companies (startups)",
+          "Pooled investment funds",
+          "SPVs / investment vehicles",
+          "Real estate"
+        ]
+      },
+      "prefill": [
+        "operating_company"
+      ],
+      "default": [
+        "operating_company"
+      ]
     },
     "industries": {
       "title": "Industries (optional)",
       "type": "array",
       "description": "Exact Form D industry group names, e.g. Biotechnology, Computers, Other Technology, Pharmaceuticals, Other Health Care, Business Services, Retailing, Manufacturing, Telecommunications, Other Energy, Oil and Gas. Empty = all.",
       "editor": "stringList",
-      "prefill": ["Other Technology", "Computers", "Biotechnology", "Other Health Care"]
+      "prefill": [
+        "Other Technology",
+        "Computers",
+        "Biotechnology",
+        "Other Health Care"
+      ]
     },
     "states": {
       "title": "Issuer states (optional)",
@@ -105,7 +133,7 @@
       "type": "integer",
       "description": "Stop after this many matched filings. Each pushed filing is one charged 'filing' event.",
       "default": 200,
-      "prefill": 50,
+      "prefill": 20,
       "minimum": 1,
       "maximum": 5000
     },
@@ -132,5 +160,6 @@
       "editor": "textfield"
     }
   },
-  "required": []
+  "required": [],
+  "description": "Find US private companies that just raised money, from official SEC Form D filings. Tip: switch on Free sample mode for a free 5-row preview."
 }

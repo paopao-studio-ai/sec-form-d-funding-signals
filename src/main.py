@@ -13,11 +13,10 @@ from typing import Any
 
 from apify import Actor
 
-from .formd import (RateLimiter, fetch_index, make_client, matches, parse_form_d, prefilter_index,
+from .formd import (RateLimiter, fetch_index, make_client, matches, parse_form_d, plan_run, prefilter_index,
                     primary_doc_url, resolve_dates, _get)
 
 STATE_STORE = "sec-form-d-funding-signals-state"
-SAMPLE_INPUT = {"daysBack": 3, "maxResults": 5, "categories": ["operating_company"]}
 
 
 def _scan(inp: dict, seen: set[str] | None, log) -> dict:
@@ -82,10 +81,11 @@ def _scan(inp: dict, seen: set[str] | None, log) -> dict:
 async def main() -> None:
     async with Actor:
         raw: dict[str, Any] = await Actor.get_input() or {}
-        sample = not any(v not in (None, "", [], {}) for v in raw.values())
-        inp = {**SAMPLE_INPUT} if sample else {**raw}
+        inp, sample = plan_run(raw)
         if sample:
-            Actor.log.info("Empty input - running the built-in sample (last 3 days, 5 rows, not charged).")
+            Actor.log.info("Free sample mode - last 3 days, operating companies, 5 rows, filters ignored, not charged.")
+        else:
+            Actor.log.info(f"Paid run - each pushed filing is one 'filing' event (maxResults={inp.get('maxResults', 200)}).")
         monitor = bool(inp.get("onlyNewSinceLastRun")) and not sample
         state_kv = await Actor.open_key_value_store(name=STATE_STORE) if monitor else None
         state_key = (inp.get("stateKey") or "default").strip() or "default"
@@ -114,6 +114,7 @@ async def main() -> None:
             merged = list(dict.fromkeys([a for a in res["scanned"] if a not in unpushed] + seen_list))[:50000]
             await state_kv.set_value(state_key, merged)
         await Actor.set_value("RUN_SUMMARY", {**stats, "pushed": pushed, "sample": sample, "monitor": monitor,
+                                               "charged_filing_events_requested": 0 if sample else pushed,
                                                "dates": res["dates"]})
         if stats["days_with_index"] == 0:
             await Actor.fail(status_message="No EDGAR daily index found for the requested dates (weekend/holiday or not yet published - indexes appear ~10pm ET).")
