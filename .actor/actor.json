@@ -1,7 +1,7 @@
 {
   "actorSpecification": 1,
   "name": "sec-form-d-funding-signals",
-  "title": "SEC Form D Funding Tracker - New Startup Rounds",
+  "title": "SEC Form D Funding Tracker",
   "description": "Daily list of US companies that just raised a private round, from official SEC Form D filings: amount, industry, state, founding year. No login or proxy.",
   "version": "1.0",
   "buildTag": "latest",
