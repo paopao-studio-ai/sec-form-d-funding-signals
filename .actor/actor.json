@@ -1,17 +1,17 @@
 {
-  "actorSpecification": 1,
-  "name": "sec-form-d-funding-signals",
-  "title": "SEC Form D Scraper — Startup Funding Data, Change Tracking + Signal Score",
-  "description": "SEC Form D scraper for Form D funding data: US companies that just raised a private round (seed, Series A, SAFE), from official SEC EDGAR filings. Amount raised, industry, state, year founded, investor count, filing link. Optional change tracking and 0–100 signal score. No login, no proxy.",
-  "version": "1.0",
-  "buildTag": "latest",
-  "minMemoryMbytes": 128,
-  "maxMemoryMbytes": 512,
-  "readme": "../README.md",
-  "input": "./input_schema.json",
-  "dockerfile": "../Dockerfile",
-  "storages": {
-    "dataset": "./dataset_schema.json"
-  },
-  "output": "./output_schema.json"
+    "actorSpecification": 1,
+    "name": "sec-form-d-funding-signals",
+    "title": "SEC Form D Scraper — Startup Funding Data + Signal Score",
+    "description": "SEC Form D scraper for Form D funding data: US companies that just raised a private round (seed, Series A, SAFE), from official SEC EDGAR filings. Amount raised, industry, state, year founded, investor count, filing link. Optional change tracking and 0–100 signal score. No login, no proxy.",
+    "version": "1.0",
+    "buildTag": "latest",
+    "minMemoryMbytes": 128,
+    "maxMemoryMbytes": 512,
+    "readme": "../README.md",
+    "input": "./input_schema.json",
+    "dockerfile": "../Dockerfile",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    },
+    "output": "./output_schema.json"
 }
