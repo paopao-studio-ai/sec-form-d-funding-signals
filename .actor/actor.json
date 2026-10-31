@@ -1,8 +1,8 @@
 {
   "actorSpecification": 1,
   "name": "sec-form-d-funding-signals",
-  "title": "SEC Form D Funding Tracker \u2014 Change Tracking + Signal Score",
-  "description": "Daily list of US companies that just raised a private round, from official SEC Form D filings. Optional change tracking (new vs repeat issuers, D/A amount deltas under a stateKey) and an explainable 0\u2013100 signal score. Caps only limit output \u2014 set Max results / Max filings to scan high enough (or use RUN_SUMMARY skip counts) if you want a full baseline. No login or proxy.",
+  "title": "SEC Form D Scraper — Startup Funding Data, Change Tracking + Signal Score",
+  "description": "SEC Form D scraper for Form D funding data: US companies that just raised a private round (seed, Series A, SAFE), from official SEC EDGAR filings. Amount raised, industry, state, year founded, investor count, filing link. Optional change tracking and 0–100 signal score. No login, no proxy.",
   "version": "1.0",
   "buildTag": "latest",
   "minMemoryMbytes": 128,

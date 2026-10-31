@@ -1,4 +1,4 @@
-# SEC Form D Funding Tracker — New Startup Rounds
+# SEC Form D Scraper — Startup Funding Data from EDGAR (Funding Tracker)
 
 **Know which US companies raised money this week — straight from the SEC filing, whether or not they announced it.** Every company that sells shares in a Reg D private round (seed, Series A/B, SAFE, convertible note, angel) must file a **Form D** with the SEC within 15 days of the first sale. This Actor reads those official filings every business day and gives you a clean, filterable list: company, amount raised, industry, city/state, year founded, number of investors, and a direct link to the filing.
 
@@ -17,7 +17,7 @@ Two optional switches (both **off by default**):
 
 Details: [Change tracking](#change-tracking-new-vs-repeat-issuers-optional) · [Signal score](#explainable-signal-score-optional).
 
-## Who it's for
+## Who uses Form D funding data
 
 | You are | What you do with it |
 |---|---|
@@ -59,7 +59,7 @@ Details: [Change tracking](#change-tracking-new-vs-repeat-issuers-optional) · [
 
 More filters: `companyKeywords` / `excludeCompanyKeywords` (e.g. `["AI","Robotics"]`), `startDate` / `endDate` (up to 90 days back), `onlyNewOfferings` (skip Form D/A amendments, on by default), `categories` (switch to `pooled_fund` or `spv_or_vehicle` if you track funds instead).
 
-## Output fields
+## Output fields (Form D funding data)
 
 One row per filing. Full real record: [`docs/example_output.json`](docs/example_output.json).
 
@@ -133,7 +133,7 @@ That is the only charge. No start fee. Filings removed by your filters, errors, 
 
 Illustration (not a measured average): a daily monitor that returns ~20 new tech/health rounds per business day ≈ 440 filings a month ≈ **$3.52/month**.
 
-## How is this different from Crunchbase?
+## How is this different from Crunchbase? (a Crunchbase alternative for US rounds)
 
 | | This Actor | Crunchbase-style databases |
 |---|---|---|
