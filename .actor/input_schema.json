@@ -16,7 +16,8 @@
       "default": 7,
       "prefill": 7,
       "minimum": 1,
-      "maximum": 90
+      "maximum": 90,
+      "example": 7
     },
     "startDate": {
       "title": "Start date (optional)",
@@ -57,6 +58,9 @@
       ],
       "default": [
         "operating_company"
+      ],
+      "example": [
+        "operating_company"
       ]
     },
     "industries": {
@@ -65,6 +69,12 @@
       "description": "Exact Form D industry group names, e.g. Biotechnology, Computers, Other Technology, Pharmaceuticals, Other Health Care, Business Services, Retailing, Manufacturing, Telecommunications, Other Energy, Oil and Gas. Empty = all.",
       "editor": "stringList",
       "prefill": [
+        "Other Technology",
+        "Computers",
+        "Biotechnology",
+        "Other Health Care"
+      ],
+      "example": [
         "Other Technology",
         "Computers",
         "Biotechnology",
@@ -83,7 +93,8 @@
       "type": "integer",
       "description": "Only filings whose total amount sold is at least this much. 0 = no minimum.",
       "prefill": 500000,
-      "minimum": 0
+      "minimum": 0,
+      "example": 500000
     },
     "maxAmountSold": {
       "title": "Maximum amount raised (USD)",
@@ -94,7 +105,7 @@
     "onlyIncorporatedWithin5Years": {
       "title": "Only companies incorporated in the last 5 years",
       "type": "boolean",
-      "description": "Keep only issuers that ticked 'within five years' on Form D \u2014 a good young-startup filter.",
+      "description": "Keep only issuers that ticked 'within five years' on Form D — a good young-startup filter.",
       "default": false
     },
     "onlyNewOfferings": {
@@ -136,7 +147,7 @@
       "default": false
     },
     "signalScoring": {
-      "title": "Signal score (0\u2013100 with reasons)",
+      "title": "Signal score (0–100 with reasons)",
       "type": "boolean",
       "description": "Off by default. Adds signal_score, signal_tier (hot/warm/cool/cold) and score_reasons to each filing: amount raised (35), first EDGAR filing / new offering (20), incorporated within 5 years (15), industry (15), first sale to filing freshness (10), round traction (5). Uses one extra SEC request per delivered filing (the issuer's EDGAR folder listing) to check whether this is its first filing.",
       "default": false
@@ -154,7 +165,8 @@
       "default": 200,
       "prefill": 20,
       "minimum": 1,
-      "maximum": 5000
+      "maximum": 5000,
+      "example": 20
     },
     "maxFilingsToScan": {
       "title": "Max filings to download",

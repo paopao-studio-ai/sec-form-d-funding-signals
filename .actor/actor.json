@@ -13,5 +13,9 @@
     "storages": {
         "dataset": "./dataset_schema.json"
     },
-    "output": "./output_schema.json"
+    "output": "./output_schema.json",
+    "exampleRunInput": {
+        "body": "{\n  \"daysBack\": 7,\n  \"categories\": [\n    \"operating_company\"\n  ],\n  \"industries\": [\n    \"Other Technology\",\n    \"Computers\",\n    \"Biotechnology\",\n    \"Other Health Care\"\n  ],\n  \"minAmountSold\": 500000,\n  \"maxResults\": 20\n}",
+        "contentType": "application/json; charset=utf-8"
+    }
 }
